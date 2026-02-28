@@ -7,20 +7,18 @@ from models.institution import Institution
 from sqlmodel import select, func
 from api.types.UserTypes import UserLoginPublic, UserRegistrationData, UserRegistrationPublic, UserLoginData
 from typing import Annotated, cast
-# password hashing
 from passlib.context import CryptContext
-from core.dep import Session
 from models.institution_to_user import InstitutionToUser
 from core.config import settings
-from jose import jwt
 from jose.exceptions import JWTError
-import datetime
+from api.service.jwt import JWTServiceDep
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 class UserController:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, jwt: JWTServiceDep):
         self.db = db
+        self.jwt = jwt
     
     def encrypt_password(self, plaintext_password: str) -> str:
         return pwd_context.hash(plaintext_password)
@@ -98,13 +96,6 @@ class UserController:
         except Exception as e:
             raise Exception(f"Error registering user: {e}")
     
-    def make_token(self, user: User):
-        payload = {
-            "user_id": user.user_id,
-            "email": user.email,
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1, minutes=30) 
-        }
-        return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     
     def login_user(self, data : UserLoginData):
         try:
@@ -115,50 +106,12 @@ class UserController:
                 raise Exception("Incorrect password")
             return UserLoginPublic(
                 user=str(user.email),
-                token=self.make_token(user)
+                token=self.jwt.make_token(user)
             )
         except Exception as e:
             raise Exception(f"Error logging in user: {e}")
         
-    def verify_token(self, token: str):
-        """Check token expiry and refresh when close to expiration.
-
-        Returns a dict containing ``user_id`` and a ``token``.  If the token has
-        more than ten minutes remaining the original token is returned; if it's
-        about to expire (<10m left) a fresh token for the same payload is
-        issued.  Expired tokens raise an exception.
-        """
-        try:
-            payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-            user = self.db.exec(select(User).where(User.user_id == payload.get("user_id"))).first()
-            if not user:
-                raise Exception("User from token not found")
-                    
-            user_id = payload.get("user_id")   
-            if user_id is None:
-                raise Exception("Invalid token: user_id missing")
-
-            exp = payload.get("exp")
-            if exp is None:
-                raise Exception("Invalid token: exp missing")
-
-            now = datetime.datetime.utcnow().timestamp()
-            time_left = exp - now
-            if time_left < 0:
-                raise Exception("Token expired")
-
-            return UserLoginPublic(
-                user=str(user.email),
-                token=self.make_token(user)
-            )
-        except JWTError as e:
-            raise Exception(f"Token verification failed: {e}")
-
-
-
-
-        
-def get_user_controller(db: Session):
-    return UserController(db)
+def get_user_controller(db: Session, jwt: JWTServiceDep):
+    return UserController(db, jwt=jwt)
     
 UserControllerDep = Annotated[UserController, Depends(get_user_controller)]
