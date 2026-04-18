@@ -22,6 +22,7 @@ from .activity import Activity
 from .program_approvers import ProgramApprover
 from .program_user_institution import InstitutionProgramUser
 from .timesheet import Timesheet
+from .approver import Approver
 
 __all__ = [
     "Base",
@@ -33,4 +34,5 @@ __all__ = [
     "ProgramApprover",
     "InstitutionProgramUser",
     "Timesheet",
+    "Approver"
 ]
