@@ -1,13 +1,15 @@
 import { useNavigate } from "react-router-dom"
+import { useRef } from 'react'
 import NavBar from "../../components/NavBar"
 import PageContainer from "../../components/PageContainer"
 import { ActionButtonsConfig } from "./helpers"
 import ActionButtons from "../../components/ActionButtons"
 import Footer from "../../components/Footer"
-import { Box, Typography } from "@mui/material"
-
+import { Box, Button, Typography } from "@mui/material"
+import LoginIcon from '@mui/icons-material/Login';
 import * as Yup from 'yup';
 import FormBuilder from '../../components/FormBuilder';
+import type { FormBuilderRef } from "../../components/FormBuilder/formbuilder"
 
 const fields = [
   { name: 'email', label: 'Email', validation: Yup.string().email().required(), type: 'text' as const },
@@ -15,8 +17,14 @@ const fields = [
 ];
 
 
+const handleSubmit = (values: Record<string, unknown>) => {
+    console.log(values)
+}
+
+
 const Login = () => {
     const navigate = useNavigate()
+    const formRef = useRef<FormBuilderRef>(null)
 
     return (
         <PageContainer>
@@ -24,6 +32,7 @@ const Login = () => {
             <Box sx={{
                 display : "flex",
                 alignItems : "center",
+                justifyContent : "center",
                 flexDirection : "column",
                 pt:10,
                 boxSizing : "border-box",
@@ -32,7 +41,6 @@ const Login = () => {
             }}>
                 
                 <Box sx={{
-                    height :"60%",
                     width : "25%",
                     backgroundColor : "#FFFFFF",
                     borderRadius : "8px",
@@ -47,7 +55,7 @@ const Login = () => {
                         width:"100%",
                         display : "flex",
                         flexDirection : "column",
-                        gap : 1
+                        gap : 0.5       
                     }}>
                          <Typography sx={{
                             fontFamily : "Manrope",
@@ -61,22 +69,94 @@ const Login = () => {
 
                          }}>Access your internship application dashboard</Typography>
                     </Box>
+
+                    <FormBuilder ref={formRef} fields={fields} onSubmit={handleSubmit} />
+
+                    <Button onClick={() => formRef.current?.submit()} variant="contained" sx={{
+                        py:2,
+                        borderRadius : "8px",
+                    }}>
+                        Login  <LoginIcon sx={{ml:1}}/>
+                    </Button>
+
+                    <Box sx={{
+                        display : "flex",
+                        justifyContent : "center",
+                        gap : 1,
+                        width : "100%",
+                    }}>
+                        <Typography sx={{
+                            fontFamily : "Manrope",
+                            fontSize : "14px",}}>Don't have an account?</Typography>
+                        <Typography onClick={() => navigate("/signup")} sx={{
+                            fontFamily : "Manrope",
+                            fontSize : "14px",
+                            color : "#4B6CB7",
+                            cursor : "pointer",
+                            fontWeight : 500,
+                            "&:hover" : {
+                                textDecoration : "underline"
+                            }
+                        }}>Sign Up</Typography>
+                    </Box>
+                </Box>
+
+
+                <Box sx={{
+                    display : "flex",
+                    justifyContent : "center",
+                    width : "100%",
+                    my :2,
+                }}>
+                    <Typography sx={{
+                        fontFamily : "Manrope",
+                        fontSize : "14px",
+                        color : "#888888",
+                    }}>Or continue with</Typography>
                 </Box>
 
                 <Box sx={{
-                    height :"60%",
-                    width : "25%",
-                    backgroundColor : "#FFFFFF",
-                    borderRadius : "8px",
-                    px : 2,
-                    py : 4,
                     display : "flex",
-                    flexDirection : "column",
-                    gap : 2
+                    width : "27%"
                 }}>
+                    <ActionButtons parentStyle={{
+                        width : "100%",
+                        display : 'flex',
+                        gap : 2,
 
-                    <FormBuilder fields={fields} onSubmit={(values) => console.log(values)} />
+                    }} 
+                    buttons={[
+                        {
+                            label : "Google",
+                            onClick : () => console.log("Google Login"),
+                            variant : "outlined" as const,
+                            style : {
+                                backgroundColor : "#FFF",
+                                width : "50%",
+                                color : "black",
+                                borderColor : "#C4C5D9",
+                                
+                            }
+                        },
+                        {
+                            label : "GitHub",
+                            onClick : () => console.log("GitHub Login"),
+                            variant : "outlined" as const,
+                            style : {
+                                backgroundColor : "#FFF",
+                                width : "50%",
+                                color : "black",
+                                borderColor : "#C4C5D9",
+                            }
+                        }
+                    ]}/>
+
                 </Box>
+                    
+
+                
+
+
 
             </Box>
             <Footer/>

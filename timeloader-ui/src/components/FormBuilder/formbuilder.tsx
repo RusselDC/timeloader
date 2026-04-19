@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Formik, Form, Field } from 'formik';
 import type { FieldInputProps, FieldMetaProps } from 'formik';
 import * as Yup from 'yup';
@@ -14,7 +14,11 @@ interface FormBuilderProps {
   containerSx?: SxProps;
 }
 
-const FormBuilder: React.FC<FormBuilderProps> = ({ fields, initialValues, onSubmit, containerSx = { display: 'flex', flexDirection: 'column' } }) => {
+export interface FormBuilderRef {
+  submit: () => void;
+}
+
+const FormBuilder = forwardRef<FormBuilderRef, FormBuilderProps>(({ fields, initialValues, onSubmit, containerSx = { display: 'flex', flexDirection: 'column' } }, ref) => {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
 
   const schema = Yup.object(
@@ -60,15 +64,23 @@ const FormBuilder: React.FC<FormBuilderProps> = ({ fields, initialValues, onSubm
 
   return (
     <Formik initialValues={vals} validationSchema={schema} onSubmit={onSubmit}>
-      <Form>
-        <Box sx={containerSx}>
-          {fields.map(fieldConfig => (
-            <div key={fieldConfig.name}>{renderField(fieldConfig)}</div>
-          ))}
-        </Box>
-      </Form>
+      {(formik) => {
+        useImperativeHandle(ref, () => ({
+          submit: () => formik.submitForm(),
+        }));
+
+        return (
+          <Form>
+            <Box sx={containerSx}>
+              {fields.map(fieldConfig => (
+                <div key={fieldConfig.name}>{renderField(fieldConfig)}</div>
+              ))}
+            </Box>
+          </Form>
+        );
+      }}
     </Formik>
   );
-};
+});
 
 export default FormBuilder;

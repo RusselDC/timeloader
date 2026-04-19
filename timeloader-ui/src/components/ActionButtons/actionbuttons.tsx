@@ -19,11 +19,9 @@ export const ActionButtons = (props : {parentStyle? : SxProps, buttons : buttonC
     return <Box sx={parentStyle}>
         {buttons.map((button, index) => {
             const {label, variant, onClick, style} = button
-            return <Box key={index}>    
-                <Button variant={variant} disableElevation sx={style} onClick={onClick}>
+            return <Button key={index} variant={variant} disableElevation sx={style} onClick={onClick}>
                     {label}
                 </Button>
-            </Box>
         })}
     </Box>
 
