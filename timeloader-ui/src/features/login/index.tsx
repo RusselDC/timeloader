@@ -10,6 +10,8 @@ import LoginIcon from '@mui/icons-material/Login';
 import * as Yup from 'yup';
 import FormBuilder from '../../components/FormBuilder';
 import type { FormBuilderRef } from "../../components/FormBuilder/formbuilder"
+import axios from "axios"
+import { useSnackbar } from "notistack"
 
 const fields = [
   { name: 'email', label: 'Email', validation: Yup.string().email().required(), type: 'text' as const },
@@ -17,14 +19,26 @@ const fields = [
 ];
 
 
-const handleSubmit = (values: Record<string, unknown>) => {
-    console.log(values)
-}
+
 
 
 const Login = () => {
     const navigate = useNavigate()
     const formRef = useRef<FormBuilderRef>(null)
+    const {enqueueSnackbar} = useSnackbar()
+
+
+
+    const handleSubmit = async (values: Record<string, unknown>) => {
+    try{
+        const response = await axios.post("/api/login", values)
+        globalThis.localStorage.setItem("token", response.data.token)
+        navigate("/dashboard")
+    }catch(error){
+        console.error("Login failed", error)
+        enqueueSnackbar("Login failed. Please try again.", { variant: "error", autoHideDuration : 3000})
+    }
+}
 
     return (
         <PageContainer>
